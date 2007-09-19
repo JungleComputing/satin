@@ -1,0 +1,95 @@
+<project name="Ibis Satin" default="build" basedir=".">
+    <description>
+	Build file for Ibis Satin implementation
+    </description>
+
+    <!-- Import environment properties -->
+    <property environment="env"/>
+    <property name="ibis"        location="${env.IBIS_HOME}"/>
+
+    <target name="build"
+	description="Build Ibis Satin"
+	depends="clean,compile,javadoc">
+    </target>
+
+    <property name="src" location="src" />
+    <property name="tmp" location="tmp" />
+    <property name="lib" location="lib" />
+    <property name="javadoc" location="javadoc" />
+
+    <path id="default.classpath">
+	<fileset dir="${ibis}/lib">
+            <include name="*.jar" />
+        </fileset>
+        <pathelement path="${tmp}" />
+    </path>
+
+    <!--
+    Compile ibis Satin
+    -->
+    <target name="compile">
+        <mkdir dir="${tmp}" />
+        <mkdir dir="${lib}" />
+
+        <!-- Compile the java code from ${src} into ${tmp} -->
+        <javac srcdir="${src}" destdir="${tmp}" debug="on">
+            <classpath refid="default.classpath" />
+        </javac>
+
+        <!-- Run Ibisc -->
+	<java classname="ibis.frontend.Ibisc"
+		taskname="Ibisc"
+		failonerror="true"
+		dir="${tmp}"
+		maxmemory="512m"
+		fork="true">
+            <arg line="." />
+            <classpath refid="default.classpath" />
+        </java>
+
+        <!-- Create jar files -->
+
+	<jar destfile="${lib}/satin-api.jar"
+		basedir="${tmp}"
+		includes="ibis/satin/*.class"/>
+	<jar destfile="${lib}/satin-impl.jar"
+		basedir="${tmp}"
+		includes="ibis/satin/impl/**/*.class">
+            <manifest>
+		<attribute name="Ibisc-Component"
+		    value="ibis.satin.impl.rewriter.Satinc" />
+            </manifest>
+        </jar>
+        <delete dir="${tmp}" />
+
+        <!-- Copy external libraries to lib directory -->
+        <copy todir="${lib}">
+	    <fileset dir="${ibis}/lib" />
+        </copy>
+    </target>
+
+    <!-- Generate javadoc -->
+    <target name="javadoc"
+        description="generate javadocs">
+	<javadoc
+		destdir="${javadoc}"
+		access="public"
+		classpathref="default.classpath"
+		packagenames="ibis.satin"
+		sourcepath="${src}"
+		overview="src/overview.html"
+		windowtitle="Ibis Satin Documentation"
+		doctitle="Ibis Satin Documentation"
+		bottom="The Ibis project">
+	    <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+        </javadoc>
+    </target>
+
+    <!-- Clean up everything -->
+    <target name="clean" description="Clean up">
+        <delete dir="${tmp}" />
+        <delete dir="${lib}" />
+        <delete dir="${javadoc}" />
+    </target>
+
+</project>
