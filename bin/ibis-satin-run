@@ -25,8 +25,8 @@ add_to_libclasspath () {
 # Add the jar files in the Ibis lib dir to the classpath.
 add_to_libclasspath "${SATIN_HOME}"/lib
 
-# and . for now ...
-add_to_libclasspath .
+# and lib ...
+add_to_libclasspath lib
 
 # And finally, run ...
 java -classpath "$CLASSPATH:$LIBCLASSPATH" -Dlog4j.configuration=file:$SATIN_HOME/log4j.properties "$@"
