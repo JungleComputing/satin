@@ -2,6 +2,7 @@
 
 package ibis.satin.impl;
 
+import ibis.io.DeepCopy;
 import ibis.ipl.IbisIdentifier;
 import ibis.satin.impl.aborts.AbortException;
 import ibis.satin.impl.aborts.Aborts;
@@ -635,6 +636,10 @@ public final class Satin implements Config {
     public static void addIntraClusterStats(long cnt) {
         thisSatin.stats.intraClusterMessages++;
         thisSatin.stats.intraClusterBytes += cnt;
+    }
+
+    public static java.io.Serializable deepCopy(java.io.Serializable o) {
+        return DeepCopy.deepCopy(o);
     }
 
     /**

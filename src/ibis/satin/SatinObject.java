@@ -3,7 +3,6 @@
 package ibis.satin;
 
 import ibis.satin.impl.Satin;
-import ibis.util.DeepCopy;
 
 import java.io.Serializable;
 
@@ -92,6 +91,6 @@ public class SatinObject implements java.io.Serializable {
      * @return the copy.
      */
     public static Serializable deepCopy(Serializable o) {
-        return DeepCopy.deepCopy(o);
+        return Satin.deepCopy(o);
     }
 }

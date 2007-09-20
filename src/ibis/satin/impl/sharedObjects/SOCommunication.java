@@ -19,7 +19,6 @@ import ibis.satin.impl.communication.Communication;
 import ibis.satin.impl.communication.Protocol;
 import ibis.satin.impl.loadBalancing.Victim;
 import ibis.satin.impl.spawnSync.InvocationRecord;
-import ibis.util.DeepCopy;
 import ibis.util.Timer;
 import ibis.util.TypedProperties;
 import ibis.util.messagecombining.MessageCombiner;
@@ -224,7 +223,7 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
             if (ASYNC_SO_BCAST) {
                 // We have to make a copy of the object first, the caller might modify it.
                 SOInvocationRecord copy =
-                        (SOInvocationRecord) DeepCopy.deepCopy(r);
+                        (SOInvocationRecord) Satin.deepCopy(r);
                 new AsyncBcaster(this, copy).start();
             } else {
                 doBroadcastSOInvocation(r);
