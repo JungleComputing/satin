@@ -161,7 +161,7 @@ final class GlobalResultTable implements Config, Protocol {
                     + v);
             } catch (IOException e) {
                 m.finish(e);
-                grtLogger.info("Got exception in finish()");
+                grtLogger.info("SATIN '" + s.ident + "': Got exception in finish()");
                 //always happens after a crash
             }
         }

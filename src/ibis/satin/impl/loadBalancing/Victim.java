@@ -99,7 +99,7 @@ public final class Victim implements Config {
             r = Communication.connect(sendPort, ident, "satin port",
                 Satin.CONNECT_TIMEOUT);
             if (r == null) {
-                Config.commLogger.debug("SATIN '" + sendPort.identifier().ibisIdentifier()
+                commLogger.warn("SATIN '" + sendPort.identifier().ibisIdentifier()
                     + "': unable to connect to " + ident
                     + ", might have crashed");
                 return null;
@@ -118,7 +118,8 @@ public final class Victim implements Config {
             if (send != null) {
                 referenceCount++;
             } else {
-                throw new IOException("Could not connect to " + ident);
+                throw new IOException("SATIN '" + sendPort.identifier().ibisIdentifier()
+                        + "': Could not connect to " + ident);
             }
         }
         return send.newMessage();
