@@ -15,10 +15,14 @@
     <property name="src" location="src" />
     <property name="tmp" location="tmp" />
     <property name="lib" location="lib" />
+    <property name="external" location="external" />
     <property name="javadoc" location="javadoc" />
 
     <path id="default.classpath">
 	<fileset dir="${ibis}/lib">
+            <include name="*.jar" />
+        </fileset>
+	<fileset dir="${external}">
             <include name="*.jar" />
         </fileset>
         <pathelement path="${tmp}" />
@@ -65,6 +69,7 @@
         <!-- Copy external libraries to lib directory -->
         <copy todir="${lib}">
 	    <fileset dir="${ibis}/lib" />
+	    <fileset dir="${external}" />
         </copy>
     </target>
 
