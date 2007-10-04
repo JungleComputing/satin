@@ -4,12 +4,12 @@ package ibis.satin.impl.sharedObjects;
 
 import ibis.ipl.MessageUpcall;
 import ibis.ipl.ReadMessage;
+import ibis.ipl.util.messagecombining.MessageSplitter;
 import ibis.satin.SharedObject;
 import ibis.satin.impl.Config;
 import ibis.satin.impl.Satin;
 import ibis.satin.impl.communication.Protocol;
 import ibis.util.Timer;
-import ibis.util.messagecombining.MessageSplitter;
 
 import java.io.IOException;
 

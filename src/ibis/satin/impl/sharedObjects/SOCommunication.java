@@ -12,6 +12,8 @@ import ibis.ipl.ReceivePort;
 import ibis.ipl.ReceivePortIdentifier;
 import ibis.ipl.SendPort;
 import ibis.ipl.WriteMessage;
+import ibis.ipl.util.messagecombining.MessageCombiner;
+import ibis.ipl.util.messagecombining.MessageSplitter;
 import ibis.satin.SharedObject;
 import ibis.satin.impl.Config;
 import ibis.satin.impl.Satin;
@@ -21,8 +23,6 @@ import ibis.satin.impl.loadBalancing.Victim;
 import ibis.satin.impl.spawnSync.InvocationRecord;
 import ibis.util.Timer;
 import ibis.util.TypedProperties;
-import ibis.util.messagecombining.MessageCombiner;
-import ibis.util.messagecombining.MessageSplitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -119,8 +119,8 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
         } else {
         return new PortType(
                 PortType.CONNECTION_ONE_TO_MANY, PortType.CONNECTION_UPCALLS,
-                PortType.CONNECTION_DOWNCALLS, PortType.RECEIVE_EXPLICIT, PortType.RECEIVE_AUTO_UPCALLS,
-                PortType.SERIALIZATION_OBJECT);
+                PortType.CONNECTION_DOWNCALLS, PortType.RECEIVE_EXPLICIT,
+                PortType.RECEIVE_AUTO_UPCALLS, PortType.SERIALIZATION_OBJECT);
         }
     }
 
