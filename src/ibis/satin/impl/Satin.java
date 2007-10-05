@@ -158,7 +158,7 @@ public final class Satin implements Config {
         if (STATS && DETAILED_STATS) {
             stats.printDetailedStats(ident);
             try {
-                comm.ibis.setDynamicProperty("statistics", "");
+                comm.ibis.setManagementProperty("statistics", "");
             } catch(Throwable e) {
                 // ignored
             }
