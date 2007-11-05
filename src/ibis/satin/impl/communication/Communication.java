@@ -137,7 +137,7 @@ public final class Communication implements Config, Protocol {
     public IbisCapabilities createIbisProperties() {
         if (CLOSED) {
             return new IbisCapabilities(
-                    IbisCapabilities.CLOSEDWORLD,
+                    IbisCapabilities.CLOSED_WORLD,
                     IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED,
                     IbisCapabilities.ELECTIONS_STRICT);
         }
