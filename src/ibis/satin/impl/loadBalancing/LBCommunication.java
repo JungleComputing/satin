@@ -318,7 +318,6 @@ final class LBCommunication implements Config, Protocol {
             try {
                 s.stats.invocationRecordReadTimer.start();
                 tmp = (InvocationRecord) m.readObject();
-                s.stats.invocationRecordReadTimer.stop();
 
                 if (ASSERTS && tmp.aborted) {
                     stealLogger.warn("SATIN '" + s.ident
@@ -328,6 +327,8 @@ final class LBCommunication implements Config, Protocol {
                 stealLogger.error("SATIN '" + s.ident
                     + "': Got Exception while reading steal " + "reply from "
                     + ident + ", opcode:" + +opcode + ", exception: " + e, e);
+            } finally {
+                s.stats.invocationRecordReadTimer.stop();
             }
 
             synchronized (s) {

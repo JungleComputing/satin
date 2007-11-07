@@ -108,57 +108,62 @@ public final class FaultTolerance implements Config {
     // The core of the fault tolerance mechanism, the crash recovery procedure
     public void handleCrashes() {
         ftLogger.debug("SATIN '" + s.ident + ": handling crashes");
+
         s.stats.crashTimer.start();
 
-        ArrayList<IbisIdentifier> crashesToHandle;
+        try {
 
-        synchronized (s) {
-            crashesToHandle = new ArrayList<IbisIdentifier>(crashedIbises);
-            crashedIbises.clear();
-            gotCrashes = false;
-        }
+            ArrayList<IbisIdentifier> crashesToHandle;
 
-        // Let the Ibis registry know, but only if this is the master or
-        // a cluster coordinator, otherwise everything gets terribly slow.
-        // Don't hold the lock while doing this.
-        for (int i = 0; i < crashesToHandle.size(); i++) {
-            IbisIdentifier id = crashesToHandle.get(0);
-            if (id.equals(s.getMasterIdent()) || id.equals(clusterCoordinatorIdent)) {
-                try {
-                    s.comm.ibis.registry().maybeDead(id);
-                } catch (IOException e) {
-                    // ignore exception
-                    ftLogger.info("SATIN '" + s.ident
-                        + "' :exception while notifying registry about "
-                        + "crash of " + id + ": " + e, e);
-                }
-            }
-        }
-
-        synchronized (s) {
-            while (crashesToHandle.size() > 0) {
-                IbisIdentifier id = crashesToHandle.remove(0);
-                ftLogger.debug("SATIN '" + s.ident + ": handling crash of "
-                    + id);
-
-                // give the load-balancing algorith a chance to clean up
-                s.algorithm.handleCrash(id);
-
-                if (!FT_NAIVE) {
-                    // abort all jobs stolen from id or descendants of jobs
-                    // stolen from id
-                    killAndStoreSubtreeOf(id);
-                }
-
-                s.outstandingJobs.redoStolenBy(id);
-                s.stats.numCrashesHandled++;
-                
-                s.so.handleCrash(id);
+            synchronized (s) {
+                crashesToHandle = new ArrayList<IbisIdentifier>(crashedIbises);
+                crashedIbises.clear();
+                gotCrashes = false;
             }
 
-            s.notifyAll();
+            // Let the Ibis registry know, but only if this is the master or
+            // a cluster coordinator, otherwise everything gets terribly slow.
+            // Don't hold the lock while doing this.
+            for (int i = 0; i < crashesToHandle.size(); i++) {
+                IbisIdentifier id = crashesToHandle.get(0);
+                if (id.equals(s.getMasterIdent()) || id.equals(clusterCoordinatorIdent)) {
+                    try {
+                        s.comm.ibis.registry().maybeDead(id);
+                    } catch (IOException e) {
+                        // ignore exception
+                        ftLogger.info("SATIN '" + s.ident
+                            + "' :exception while notifying registry about "
+                            + "crash of " + id + ": " + e, e);
+                    }
+                }
+            }
+
+            synchronized (s) {
+                while (crashesToHandle.size() > 0) {
+                    IbisIdentifier id = crashesToHandle.remove(0);
+                    ftLogger.debug("SATIN '" + s.ident + ": handling crash of "
+                        + id);
+
+                    // give the load-balancing algorith a chance to clean up
+                    s.algorithm.handleCrash(id);
+
+                    if (!FT_NAIVE) {
+                        // abort all jobs stolen from id or descendants of jobs
+                        // stolen from id
+                        killAndStoreSubtreeOf(id);
+                    }
+
+                    s.outstandingJobs.redoStolenBy(id);
+                    s.stats.numCrashesHandled++;
+                    
+                    s.so.handleCrash(id);
+                }
+
+                s.notifyAll();
+            }
+        } finally {
+            s.stats.crashTimer.stop();
         }
-        s.stats.crashTimer.stop();
     }
 
     public void handleMasterCrash() {

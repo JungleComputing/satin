@@ -356,12 +356,11 @@ final class FTCommunication implements Config, ReceivePortConnectUpcall,
     protected void handleResultRequest(ReadMessage m) {
         Victim v = null;
         GlobalResultTableValue value = null;
-        Timer handleLookupTimer = null;
+        Timer handleLookupTimer = Timer.createTimer();
+
+        handleLookupTimer.start();
 
         try {
-            handleLookupTimer = Timer.createTimer();
-            handleLookupTimer.start();
-
             Stamp stamp = (Stamp) m.readObject();
 
             IbisIdentifier ident = m.origin().ibisIdentifier();
@@ -387,8 +386,6 @@ final class FTCommunication implements Config, ReceivePortConnectUpcall,
             if (v == null) {
                 ftLogger.debug("SATIN '" + s.ident
                         + "': the node requesting a result died");
-                handleLookupTimer.stop();
-                s.stats.handleLookupTimer.add(handleLookupTimer);
                 return;
             }
             value.result.setStamp(stamp);
@@ -408,9 +405,10 @@ final class FTCommunication implements Config, ReceivePortConnectUpcall,
             grtLogger.error("SATIN '" + s.ident
                     + "': trying to send result back, but got exception: " + e,
                     e);
+        } finally {
+            handleLookupTimer.stop();
+            s.stats.handleLookupTimer.add(handleLookupTimer);
         }
-        handleLookupTimer.stop();
-        s.stats.handleLookupTimer.add(handleLookupTimer);
     }
 
     protected void handleResultPush(ReadMessage m) {

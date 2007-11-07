@@ -117,20 +117,22 @@ public final class SharedObjects implements Config {
             }
 
             s.stats.handleSOInvocationsTimer.start();
-            SharedObject so = getSOReference(soir.getObjectId());
+            try {
+                SharedObject so = getSOReference(soir.getObjectId());
 
-            if (so == null) {
+                if (so == null) {
+                    return;
+                }
+
+                // No need to hold the satin lock here.
+                // Object transfer requests cannot be handled
+                // in the middle of a method invocation, 
+                // as transfers are  delayed until a safe point is
+                // reached
+                soir.invoke(so);
+            } finally {
                 s.stats.handleSOInvocationsTimer.stop();
-                return;
             }
-
-            // No need to hold the satin lock here.
-            // Object transfer requests cannot be handled
-            // in the middle of a method invocation, 
-            // as transfers are  delayed until a safe point is
-            // reached
-            soir.invoke(so);
-            s.stats.handleSOInvocationsTimer.stop();
         }
     }
 

@@ -83,9 +83,9 @@ public abstract class LoadBalancingAlgorithm implements Config {
                 Thread.sleep(time);
             } catch (InterruptedException e) {
                 // ignore
+            } finally {
+                satin.stats.stealThrottleTimer.stop();
             }
-
-            satin.stats.stealThrottleTimer.stop();
         }
     }
 }

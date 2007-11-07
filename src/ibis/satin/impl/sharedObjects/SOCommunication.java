@@ -204,13 +204,13 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
             } catch (IOException e) {
                 System.err.println("SATIN '" + s.ident
                     + "': unable to broadcast shared object invocations " + e);
+            } finally {
+                s.stats.broadcastSOInvocationsTimer.stop();
             }
 
             s.stats.soRealMessageCount++;
             soCurrTotalMessageSize = 0;
             soInvocationsDelayTimer = -1;
-
-            s.stats.broadcastSOInvocationsTimer.stop();
         }
     }
 
@@ -249,10 +249,10 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
         }
         soBcastLogger.debug("SATIN '" + s.ident
             + "': broadcasting so invocation for: " + r.getObjectId());
-        s.stats.broadcastSOInvocationsTimer.start();
-        s.so.registerMulticast(s.so.getSOReference(r.getObjectId()), tmp);
 
         try {
+            s.stats.broadcastSOInvocationsTimer.start();
+            s.so.registerMulticast(s.so.getSOReference(r.getObjectId()), tmp);
             int id = omc.send(r);
             long size = omc.lastSize();
             omcInfo.registerSend(id, size);
@@ -262,9 +262,10 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
             s.stats.soInvocations++;
             s.stats.soRealMessageCount++;
             s.stats.soInvocationsBytes += size;
-            s.stats.broadcastSOInvocationsTimer.stop();
         } catch (Exception e) {
             soBcastLogger.warn("SOI mcast failed: " + e + " msg: " + e.getMessage());
+        } finally {
+            s.stats.broadcastSOInvocationsTimer.stop();
         }
     }
 
@@ -275,48 +276,52 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
 
         s.stats.broadcastSOInvocationsTimer.start();
 
-        connectSendPortToNewReceivers();
+        try {
 
-        IbisIdentifier[] tmp;
-        synchronized (s) {
-            tmp = s.victims.getIbises();
-        }
-        s.so.registerMulticast(s.so.getSOReference(r.getObjectId()), tmp);
+            connectSendPortToNewReceivers();
 
-        if (soSendPort != null && soSendPort.connectedTo().length > 0) {
-            try {
-                if (SO_MAX_INVOCATION_DELAY > 0) { // do message combining
-                    w = soMessageCombiner.newMessage();
-                    if (soInvocationsDelayTimer == -1) {
-                        soInvocationsDelayTimer = System.currentTimeMillis();
+            IbisIdentifier[] tmp;
+            synchronized (s) {
+                tmp = s.victims.getIbises();
+            }
+            s.so.registerMulticast(s.so.getSOReference(r.getObjectId()), tmp);
+
+            if (soSendPort != null && soSendPort.connectedTo().length > 0) {
+                try {
+                    if (SO_MAX_INVOCATION_DELAY > 0) { // do message combining
+                        w = soMessageCombiner.newMessage();
+                        if (soInvocationsDelayTimer == -1) {
+                            soInvocationsDelayTimer = System.currentTimeMillis();
+                        }
+                    } else {
+                        w = soSendPort.newMessage();
                     }
+
+                    w.writeByte(SO_INVOCATION);
+                    w.writeObject(r);
+                    byteCount = w.finish();
+
+                } catch (IOException e) {
+                    if (w != null) {
+                        w.finish(e);
+                    }
+                    System.err
+                        .println("SATIN '" + s.ident
+                            + "': unable to broadcast a shared object invocation: "
+                            + e);
+                }
+                if (SO_MAX_INVOCATION_DELAY > 0) {
+                    soCurrTotalMessageSize += byteCount;
                 } else {
-                    w = soSendPort.newMessage();
+                    s.stats.soRealMessageCount++;
                 }
-
-                w.writeByte(SO_INVOCATION);
-                w.writeObject(r);
-                byteCount = w.finish();
-
-            } catch (IOException e) {
-                if (w != null) {
-                    w.finish(e);
-                }
-                System.err
-                    .println("SATIN '" + s.ident
-                        + "': unable to broadcast a shared object invocation: "
-                        + e);
             }
-            if (SO_MAX_INVOCATION_DELAY > 0) {
-                soCurrTotalMessageSize += byteCount;
-            } else {
-                s.stats.soRealMessageCount++;
-            }
+
+            s.stats.soInvocations++;
+            s.stats.soInvocationsBytes += byteCount;
+        } finally {
+            s.stats.broadcastSOInvocationsTimer.stop();
         }
-
-        s.stats.soInvocations++;
-        s.stats.soInvocationsBytes += byteCount;
-        s.stats.broadcastSOInvocationsTimer.stop();
 
         // Try to send immediately if needed.
         // We might not reach a safe point for a considerable time.
@@ -347,47 +352,54 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
 
         s.stats.soBroadcastTransferTimer.start();
 
-        connectSendPortToNewReceivers();
-
-        if (soSendPort == null) {
-            s.stats.soBroadcastTransferTimer.stop();
-            return;
-        }
-
-        IbisIdentifier[] tmp;
-        synchronized (s) {
-            tmp = s.victims.getIbises();
-        }
-        s.so.registerMulticast(s.so.getSOReference(object.getObjectId()), tmp);
-
         try {
-            if (SO_MAX_INVOCATION_DELAY > 0) {
-                //do message combining
-                w = soMessageCombiner.newMessage();
-            } else {
-                w = soSendPort.newMessage();
+
+            connectSendPortToNewReceivers();
+
+            if (soSendPort == null) {
+                s.stats.soBroadcastTransferTimer.stop();
+                return;
             }
 
-            w.writeByte(SO_TRANSFER);
-            s.stats.soBroadcastSerializationTimer.start();
-            w.writeObject(object);
-            s.stats.soBroadcastSerializationTimer.stop();
-            size = w.finish();
-            w = null;
-            if (SO_MAX_INVOCATION_DELAY > 0) {
-                soMessageCombiner.sendAccumulatedMessages();
+            IbisIdentifier[] tmp;
+            synchronized (s) {
+                tmp = s.victims.getIbises();
             }
-        } catch (IOException e) {
-            if (w != null) {
-                w.finish(e);
+            s.so.registerMulticast(s.so.getSOReference(object.getObjectId()), tmp);
+
+            try {
+                if (SO_MAX_INVOCATION_DELAY > 0) {
+                    //do message combining
+                    w = soMessageCombiner.newMessage();
+                } else {
+                    w = soSendPort.newMessage();
+                }
+
+                w.writeByte(SO_TRANSFER);
+                s.stats.soBroadcastSerializationTimer.start();
+                try {
+                    w.writeObject(object);
+                    size = w.finish();
+                } finally {
+                    s.stats.soBroadcastSerializationTimer.stop();
+                }
+                w = null;
+                if (SO_MAX_INVOCATION_DELAY > 0) {
+                    soMessageCombiner.sendAccumulatedMessages();
+                }
+            } catch (IOException e) {
+                if (w != null) {
+                    w.finish(e);
+                }
+                System.err.println("SATIN '" + s.ident
+                    + "': unable to broadcast a shared object: " + e);
             }
-            System.err.println("SATIN '" + s.ident
-                + "': unable to broadcast a shared object: " + e);
+
+            s.stats.soBcasts++;
+            s.stats.soBcastBytes += size;
+        } finally {
+            s.stats.soBroadcastTransferTimer.stop();
         }
-
-        s.stats.soBcasts++;
-        s.stats.soBcastBytes += size;
-        s.stats.soBroadcastTransferTimer.stop();
     }
 
     /** Broadcast an so invocation */
@@ -400,23 +412,28 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
 
         soBcastLogger.info("SATIN '" + s.ident + "': broadcasting object: "
             + object.getObjectId());
-        s.stats.soBroadcastTransferTimer.start();
-        s.so.registerMulticast(object, tmp);
-
         try {
+            s.stats.soBroadcastTransferTimer.start();
+            s.so.registerMulticast(object, tmp);
             s.stats.soBroadcastSerializationTimer.start();
-            int id = omc.send(object);
-            long size = omc.lastSize();
-            omcInfo.registerSend(id, size);            
-            s.stats.soBroadcastSerializationTimer.stop();
+            int id;
+            long size;
+            try {
+                id = omc.send(object);
+                size = omc.lastSize();
+                omcInfo.registerSend(id, size);            
+            } finally {
+                s.stats.soBroadcastSerializationTimer.stop();
+            }
             if(BLOCKING_BCAST) {
                 omcInfo.waitForCompletion(id);
             }
             s.stats.soBcasts++;
             s.stats.soBcastBytes += size;
-            s.stats.soBroadcastTransferTimer.stop();
         } catch (Exception e) {
             soBcastLogger.warn("SATIN '" + s.ident + "': SO mcast failed: " + e, e);
+        } finally {
+            s.stats.soBroadcastTransferTimer.stop();
         }
     }
 
@@ -617,47 +634,39 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
         // No need to hold the lock while writing the object.
         // Updates cannot change the state of the object during the send, 
         // they are delayed until safe a point.
-        s.stats.soTransferTimer.start();
         SharedObject so = info.sharedObject;
         try {
-            wm = v.newMessage();
-            wm.writeByte(SO_TRANSFER);
-        } catch (IOException e) {
-            s.stats.soTransferTimer.stop();
-            if (wm != null) {
-                wm.finish(e);
+            s.stats.soTransferTimer.start();
+            try {
+                wm = v.newMessage();
+                wm.writeByte(SO_TRANSFER);
+            } catch (IOException e) {
+                if (wm != null) {
+                    wm.finish(e);
+                }
+                soLogger.error("SATIN '" + s.ident
+                    + "': got exception while sending" + " shared object", e);
+                return;
             }
-            soLogger.error("SATIN '" + s.ident
-                + "': got exception while sending" + " shared object", e);
-            return;
-        }
 
-        s.stats.soSerializationTimer.start();
-        try {
-            wm.writeObject(so);
-        } catch (IOException e) {
-            s.stats.soSerializationTimer.stop();
+            s.stats.soSerializationTimer.start();
+            try {
+                wm.writeObject(so);
+                size = v.finish(wm);
+            } catch (IOException e) {
+                wm.finish(e);
+                soLogger.error("SATIN '" + s.ident
+                    + "': got exception while sending" + " shared object", e);
+                return;
+            } finally {
+                s.stats.soSerializationTimer.stop();
+            }
+        } finally {
             s.stats.soTransferTimer.stop();
-            wm.finish(e);
-            soLogger.error("SATIN '" + s.ident
-                + "': got exception while sending" + " shared object", e);
-            return;
-        }
-        s.stats.soSerializationTimer.stop();
-
-        try {
-            size = v.finish(wm);
-        } catch (IOException e) {
-            s.stats.soTransferTimer.stop();
-            wm.finish(e);
-            soLogger.error("SATIN '" + s.ident
-                + "': got exception while sending" + " shared object", e);
-            return;
         }
 
         s.stats.soTransfers++;
         s.stats.soTransfersBytes += size;
-        s.stats.soTransferTimer.stop();
     }
 
     protected void handleSORequest(ReadMessage m, boolean demand) {
@@ -695,8 +704,9 @@ final class SOCommunication implements Config, Protocol, SendDoneUpcaller {
         } catch (ClassNotFoundException e) {
             soLogger.error("SATIN '" + s.ident
                 + "': got exception while reading" + " shared object", e);
+        } finally {
+            s.stats.soDeserializationTimer.stop();
         }
-        s.stats.soDeserializationTimer.stop();
 
         // no need to finish the read message here. 
         // We don't block and don't do any communication

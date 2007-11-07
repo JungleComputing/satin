@@ -39,29 +39,33 @@ final class GlobalResultTable implements Config, Protocol {
     }
 
     protected GlobalResultTableValue lookup(Stamp key) {
+
         if (key == null) return null;
 
-        s.stats.lookupTimer.start();
         Satin.assertLocked(s);
 
-        GlobalResultTableValue value = entries.get(key);
+        s.stats.lookupTimer.start();
+        try {
 
-        if (value != null) {
-            grtLogger
-                .debug("SATIN '" + s.ident + "': lookup successful " + key);
-            if (value.type == GlobalResultTableValue.TYPE_POINTER) {
-                if (!s.deadIbises.contains(value.owner)) {
+            GlobalResultTableValue value = entries.get(key);
+
+            if (value != null) {
+                grtLogger
+                    .debug("SATIN '" + s.ident + "': lookup successful " + key);
+                if (value.type == GlobalResultTableValue.TYPE_POINTER) {
+                    if (!s.deadIbises.contains(value.owner)) {
+                        s.stats.tableSuccessfulLookups++;
+                        s.stats.tableRemoteLookups++;
+                    }
+                } else {
                     s.stats.tableSuccessfulLookups++;
-                    s.stats.tableRemoteLookups++;
                 }
-            } else {
-                s.stats.tableSuccessfulLookups++;
             }
+            s.stats.tableRemoteLookups++;
+            return value;
+        } finally {
+            s.stats.lookupTimer.stop();
         }
-        s.stats.tableRemoteLookups++;
-        s.stats.lookupTimer.stop();
-
-        return value;
     }
 
     protected void storeResult(InvocationRecord r) {
@@ -69,38 +73,45 @@ final class GlobalResultTable implements Config, Protocol {
 
         s.stats.updateTimer.start();
 
-        GlobalResultTableValue value = new GlobalResultTableValue(
-            GlobalResultTableValue.TYPE_RESULT, r);
+        try {
 
-        Stamp key = r.getStamp();
-        Object oldValue = entries.get(key);
-        entries.put(key, value);
-        s.stats.tableResultUpdates++;
-        if (entries.size() > s.stats.tableMaxEntries) {
-            s.stats.tableMaxEntries = entries.size();
+            GlobalResultTableValue value = new GlobalResultTableValue(
+                GlobalResultTableValue.TYPE_RESULT, r);
+
+            Stamp key = r.getStamp();
+            Object oldValue = entries.get(key);
+            entries.put(key, value);
+            s.stats.tableResultUpdates++;
+            if (entries.size() > s.stats.tableMaxEntries) {
+                s.stats.tableMaxEntries = entries.size();
+            }
+
+            if (oldValue == null) {
+                toSend.put(key, pointerValue);
+                s.ft.updatesToSend = true;
+            }
+
+            grtLogger.debug("SATIN '" + s.ident + "': update complete: " + key
+                + "," + value);
+
+        } finally {
+            s.stats.updateTimer.stop();
         }
-
-        if (oldValue == null) {
-            toSend.put(key, pointerValue);
-            s.ft.updatesToSend = true;
-        }
-
-        grtLogger.debug("SATIN '" + s.ident + "': update complete: " + key
-            + "," + value);
-
-        s.stats.updateTimer.stop();
     }
 
     protected void updateAll(Map<Stamp, GlobalResultTableValue> updates) {
         Satin.assertLocked(s);
         s.stats.updateTimer.start();
-        entries.putAll(updates);
-        toSend.putAll(updates);
-        s.stats.tableResultUpdates += updates.size();
-        if (entries.size() > s.stats.tableMaxEntries) {
-            s.stats.tableMaxEntries = entries.size();
+        try {
+            entries.putAll(updates);
+            toSend.putAll(updates);
+            s.stats.tableResultUpdates += updates.size();
+            if (entries.size() > s.stats.tableMaxEntries) {
+                s.stats.tableMaxEntries = entries.size();
+            }
+        } finally {
+            s.stats.updateTimer.stop();
         }
-        s.stats.updateTimer.stop();
         s.ft.updatesToSend = true;
     }
 
@@ -119,57 +130,60 @@ final class GlobalResultTable implements Config, Protocol {
         updateTimer = Timer.createTimer();
         updateTimer.start();
 
-        for(int i=0; i<size; i++) {
-            Victim v;
-            WriteMessage m = null;
+        try {
+            for(int i=0; i<size; i++) {
+                Victim v;
+                WriteMessage m = null;
 
-            synchronized (s) {
-                v = s.victims.getVictim(i);
+                synchronized (s) {
+                    v = s.victims.getVictim(i);
+                }
+
+                if (v == null) {
+                    continue;
+                }
+
+                try {
+                    m = v.newMessage();
+                } catch (Exception e) {
+                    //Catch any exception: the victim may not exist anymore
+                    grtLogger.info("Got exception in newMessage()", e);
+                    continue;
+                    //always happens after a crash
+                }
+
+                tableSerializationTimer = Timer.createTimer();
+                tableSerializationTimer.start();
+                try {
+                    m.writeByte(GRT_UPDATE);
+                    m.writeObject(toSend);
+                } catch (IOException e) {
+                    grtLogger.info("Got exception in writeObject()", e);
+                    //always happens after a crash
+                } finally {
+                    tableSerializationTimer.stop();
+                    s.stats.tableSerializationTimer.add(tableSerializationTimer);
+                }
+
+                try {
+                    long msgSize = v.finish(m);
+
+                    grtLogger.debug("SATIN '" + s.ident + "': " + msgSize
+                        + " sent in "
+                        + s.stats.tableSerializationTimer.lastTimeVal() + " to "
+                        + v);
+                } catch (IOException e) {
+                    m.finish(e);
+                    grtLogger.info("SATIN '" + s.ident + "': Got exception in finish()");
+                    //always happens after a crash
+                }
             }
 
-            if (v == null) {
-                continue;
-            }
-
-            try {
-                m = v.newMessage();
-            } catch (Exception e) {
-                //Catch any exception: the victim may not exist anymore
-                grtLogger.info("Got exception in newMessage()", e);
-                continue;
-                //always happens after a crash
-            }
-
-            tableSerializationTimer = Timer.createTimer();
-            tableSerializationTimer.start();
-            try {
-                m.writeByte(GRT_UPDATE);
-                m.writeObject(toSend);
-            } catch (IOException e) {
-                grtLogger.info("Got exception in writeObject()", e);
-                //always happens after a crash
-            }
-            tableSerializationTimer.stop();
-            s.stats.tableSerializationTimer.add(tableSerializationTimer);
-
-            try {
-                long msgSize = v.finish(m);
-
-                grtLogger.debug("SATIN '" + s.ident + "': " + msgSize
-                    + " sent in "
-                    + s.stats.tableSerializationTimer.lastTimeVal() + " to "
-                    + v);
-            } catch (IOException e) {
-                m.finish(e);
-                grtLogger.info("SATIN '" + s.ident + "': Got exception in finish()");
-                //always happens after a crash
-            }
+            s.stats.tableUpdateMessages++;
+        } finally {
+            updateTimer.stop();
+            s.stats.updateTimer.add(updateTimer);
         }
-
-        s.stats.tableUpdateMessages++;
-
-        updateTimer.stop();
-        s.stats.updateTimer.add(updateTimer);
     }
 
     // Returns ready to send contents of the table.
