@@ -41,7 +41,7 @@
         </javac>
 
         <!-- Run Ibisc -->
-	<java classname="ibis.frontend.Ibisc"
+	<java classname="ibis.compile.Ibisc"
 		taskname="Ibisc"
 		failonerror="true"
 		dir="${tmp}"
