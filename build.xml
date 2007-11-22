@@ -12,6 +12,10 @@
 	depends="clean,compile,javadoc">
     </target>
 
+    <target name="build-external-ibis"
+	depends="build">
+    </target>
+
     <property name="src" location="src" />
     <property name="tmp" location="tmp" />
     <property name="lib" location="lib" />
