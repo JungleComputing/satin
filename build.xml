@@ -40,9 +40,14 @@
         <mkdir dir="${lib}" />
 
         <!-- Compile the java code from ${src} into ${tmp} -->
-        <javac srcdir="${src}" destdir="${tmp}" debug="on">
-            <classpath refid="default.classpath" />
-        </javac>
+        <javac srcdir="${src}" 
+               destdir="${tmp}" 
+               debug="on"
+               source="1.5"
+               target="1.5"
+               classpathref="default.classpath">
+		<compilerarg value="-Xlint:unchecked" />
+	</javac>
 
         <!-- Run Ibisc -->
 	<java classname="ibis.compile.Ibisc"
