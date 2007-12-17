@@ -1009,12 +1009,12 @@ public final class Satinc extends IbiscComponent {
 
         if (!returnType.equals(Type.VOID)) {
             store = i.getNext().getInstruction();
-            storeIns = getAndRemoveStoreIns(il, i.getNext());
             if (store instanceof ReturnInstruction) {
                 System.err.println("\"return <spawnable method>\" is not "
                     + "allowed");
                 System.exit(1);
             }
+            storeIns = getAndRemoveStoreIns(il, i.getNext());
         }
 
         int storeId = allocateId(storeIns, target, cl);
