@@ -23,6 +23,7 @@ import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.bcel.generic.ALOAD;
@@ -1010,8 +1011,12 @@ public final class Satinc extends IbiscComponent {
         if (!returnType.equals(Type.VOID)) {
             store = i.getNext().getInstruction();
             if (store instanceof ReturnInstruction) {
-                System.err.println("\"return <spawnable method>\" is not "
-                    + "allowed");
+                LineNumberTable t = m.getLineNumberTable(cpg);
+                int l = t.getSourceLine(i.getNext().getPosition());
+
+                System.err.println("Error: \"return <spawnable method>\" is not "
+                    + "allowed, class " + m.getClassName()
+                    + ", line " + l);
                 System.exit(1);
             }
             storeIns = getAndRemoveStoreIns(il, i.getNext());
