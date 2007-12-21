@@ -1,43 +1,68 @@
-<project name="Ibis Satin" default="build" basedir=".">
+<project name="satin" default="build" basedir=".">
     <description>
-	Build file for Ibis Satin implementation
+	Build file for Satin
     </description>
 
+    <property name="version" value="-2.0" />
+
+    <property name="dist-name" value="${ant.project.name}${version}" />
+
     <!-- Import environment properties -->
-    <property environment="env"/>
-    <property name="ibis"        location="${env.IBIS_HOME}"/>
+
+    <property environment="env" />
+    <property name="ibis" location="${env.IBIS_HOME}" />
 
     <target name="build"
-	description="Build Ibis Satin"
-	depends="clean,compile,javadoc">
-    </target>
+            description="Build with included Ibis"
+            depends="clean,copy-included-ibis,compile,javadoc" />
 
     <target name="build-external-ibis"
-	depends="build">
-    </target>
+            description="Build with external Ibis"
+            depends="clean,copy-external-ibis,compile,javadoc" />
 
     <property name="src" location="src" />
     <property name="tmp" location="tmp" />
     <property name="lib" location="lib" />
     <property name="external" location="external" />
     <property name="javadoc" location="javadoc" />
+    <property name="sources" location="sources" />
 
-    <path id="default.classpath">
-	<fileset dir="${ibis}/lib">
-            <include name="*.jar" />
-        </fileset>
-	<fileset dir="${external}">
-            <include name="*.jar" />
-        </fileset>
-        <pathelement path="${tmp}" />
-    </path>
+    <!-- copy external dependancies to lib, including provided Ibis -->
+    <target name="copy-included-ibis">
+        <mkdir dir="${lib}" />
 
-    <!--
-    Compile ibis Satin
-    -->
+        <copy todir="${lib}">
+            <fileset dir="${external}/ibis" />
+        </copy>
+    </target>
+
+    <!-- copy external dependancies to lib, includig Ibis 
+         specified by $IBIS_HOME -->
+    <target name="copy-external-ibis">
+        <mkdir dir="${lib}" />
+
+        <copy todir="${lib}">
+            <fileset dir="${ibis}/lib" />
+        </copy>
+
+    </target>
+
+    <!-- Compile -->
     <target name="compile">
         <mkdir dir="${tmp}" />
         <mkdir dir="${lib}" />
+
+        <!-- copy jars in external directory to lib -->
+        <copy todir="${lib}">
+            <fileset dir="${external}" includes="*.jar" />
+        </copy>
+
+        <path id="default.classpath">
+            <fileset dir="${lib}">
+                <include name="*.jar" />
+            </fileset>
+            <pathelement path="${tmp}" />
+        </path>
 
         <!-- Compile the java code from ${src} into ${tmp} -->
         <javac srcdir="${src}" 
@@ -50,52 +75,39 @@
 	</javac>
 
         <!-- Run Ibisc -->
-	<java classname="ibis.compile.Ibisc"
-		taskname="Ibisc"
-		failonerror="true"
-		dir="${tmp}"
-		maxmemory="512m"
-		fork="true">
+        <java classname="ibis.compile.Ibisc"
+              taskname="Ibisc"
+              failonerror="true"
+              dir="${tmp}"
+              maxmemory="512m"
+              fork="true">
             <arg line="." />
             <classpath refid="default.classpath" />
         </java>
 
-        <!-- Create jar files -->
-
-	<jar destfile="${lib}/satin-api.jar"
-		basedir="${tmp}"
-		includes="ibis/satin/*.class"/>
-	<jar destfile="${lib}/satin-impl.jar"
-		basedir="${tmp}"
-		includes="ibis/satin/impl/**/*.class">
-            <manifest>
-		<attribute name="Ibisc-Component"
-		    value="ibis.satin.impl.rewriter.Satinc" />
+        <!-- Create jar file -->
+        <jar destfile="${lib}/${dist-name}.jar" basedir="${tmp}" includes="**/*.class">
+	    <manifest>
+                <attribute name="Ibisc-Component"
+                    value="ibis.satin.impl.rewriter.Satinc" />
             </manifest>
         </jar>
         <delete dir="${tmp}" />
 
         <!-- Copy external libraries to lib directory -->
-        <copy todir="${lib}">
-	    <fileset dir="${ibis}/lib" />
-	    <fileset dir="${external}" />
-        </copy>
     </target>
 
     <!-- Generate javadoc -->
-    <target name="javadoc"
-        description="generate javadocs">
-	<javadoc
-		destdir="${javadoc}"
-		access="public"
-		classpathref="default.classpath"
-		packagenames="ibis.satin"
-		sourcepath="${src}"
-		overview="src/overview.html"
-		windowtitle="Ibis Satin Documentation"
-		doctitle="Ibis Satin Documentation"
-		bottom="The Ibis project">
-	    <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+    <target name="javadoc" description="generate all javadocs">
+        <javadoc destdir="${javadoc}"
+                 access="public"
+                 classpathref="default.classpath"
+                 packagenames="*"
+                 sourcepath="${src}"
+                 windowtitle="Ibis ${ant.project.name} Documentation"
+                 doctitle="Ibis ${ant.project.name} Documentation"
+                 bottom="The Ibis project">
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api/" />
         </javadoc>
     </target>
 
@@ -104,6 +116,34 @@
         <delete dir="${tmp}" />
         <delete dir="${lib}" />
         <delete dir="${javadoc}" />
+    </target>
+
+    <target name="dist" depends="build">
+        <delete file="${dist-name}.zip" />
+        <delete dir="${sources}" />
+
+        <mkdir dir="${sources}" />
+
+        <zip destfile="${sources}/${dist-name}-src.zip">
+            <zipfileset dir="src"
+                        includes="**/*.java"
+                        prefix="${dist-name}" />
+
+            <zipfileset dir="."
+                        includes="LICENSE.txt"
+                        prefix="${sources-filename}" />
+        </zip>
+
+        <zip destfile="${dist-name}.zip">
+            <zipfileset dir="."
+                        prefix="${dist-name}"
+                        includes="javadoc/**,docs/*.pdf,lib/**,notices/**,sources/**,BUGS.txt,LICENSE.txt,HISTORY.txt,README.txt,INSTALL.txt,ibis.properties.example,log4j.properties,smartsockets.properties.example,examples/**,benchmarks/**"/>
+            <zipfileset dir="."
+                        prefix="${dist-name}"
+                        filemode="755"
+                        includes="bin/**" />
+        </zip>
+
     </target>
 
 </project>
