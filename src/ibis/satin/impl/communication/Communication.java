@@ -84,9 +84,9 @@ public final class Communication implements Config, Protocol {
         }
     }
 
-    public IbisIdentifier electMaster() {
+    public IbisIdentifier elect(String election) {
         Registry r = ibis.registry();
-        IbisIdentifier masterIdent = null;
+        IbisIdentifier winner = null;
 
         String canonicalMasterHost = null;
         String localHostName = null;
@@ -98,7 +98,7 @@ public final class Communication implements Config, Protocol {
             } catch (Exception e) {
                 commLogger.warn("satin.masterhost is set to an unknown "
                         + "name: " + MASTER_HOST);
-                commLogger.warn("continuing with default master election");
+                commLogger.warn("continuing with default election");
             }
             try {
                 localHostName = InetAddress.getLocalHost()
@@ -111,22 +111,22 @@ public final class Communication implements Config, Protocol {
             try {
                 if (canonicalMasterHost == null
                         || !canonicalMasterHost.equals(localHostName)) {
-                    masterIdent = r.getElectionResult("satin master");
+                    winner = r.getElectionResult(election);
                 } else {
-                    masterIdent = r.elect("satin master");
+                    winner = r.elect(election);
                 }
             } catch (Exception e) {
-                s.assertFailed("Could not do an election for the master: ", e);
+                s.assertFailed("Could not do an election for " + election + ": ", e);
             }
         } else {
             try {
-                masterIdent = r.elect("satin master");
+                winner = r.elect(election);
             } catch (Exception e) {
-                s.assertFailed("Could not do an election for the master: ", e);
+                s.assertFailed("Could not do an election for " + election + ": ", e);
             }
         }
 
-        return masterIdent;
+        return winner;
     }
 
     public void enableConnections() {

@@ -41,11 +41,18 @@ final class FTCommunication implements Config, ReceivePortConnectUpcall,
 
     protected void electClusterCoordinator() {
         try {
-            Registry r = s.comm.ibis.registry();
-            s.ft.clusterCoordinatorIdent =
-                    r.elect("satin "
-                            + Victim.clusterOf(s.comm.ibis.identifier())
-                            + " cluster coordinator");
+            String election = "satin " + Victim.clusterOf(s.comm.ibis.identifier())
+                        + " cluster coordinator";
+            if (s.ft.clusterCoordinatorIdent == null) {
+                // Note: if the satin.masterHost property is set, the code below only
+                // works if there is only one cluster! If not, this hangs.
+                // TODO: fix this!
+                s.ft.clusterCoordinatorIdent = s.comm.elect(election);
+            } else {
+                // Apparently, the cluster coordinator crashed. Elect a new one.
+                Registry r = s.comm.ibis.registry();
+                s.ft.clusterCoordinatorIdent = r.elect(election);
+            }
             if (s.ft.clusterCoordinatorIdent.equals(s.comm.ibis.identifier())) {
                 /* I am the cluster coordinator */
                 s.clusterCoordinator = true;
