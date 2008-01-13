@@ -43,20 +43,21 @@ public final class Communication implements Config, Protocol {
     public Ibis ibis;
 
     public boolean paused = false;
-    
+
     public Communication(Satin s) {
         this.s = s;
 
         IbisCapabilities ibisProperties = createIbisProperties();
 
         commLogger.debug("SATIN '" + "- " + "': init ibis");
-        
+
         portType = createSatinPortType();
-        
+
         try {
-            ibis = IbisFactory.createIbis(ibisProperties,
-                    null, true, s.ft.getRegistryEventHandler(), portType, 
-                            SharedObjects.getSOPortType());
+            ibis =
+                IbisFactory.createIbis(ibisProperties, null, true,
+                    s.ft.getRegistryEventHandler(), portType,
+                    SharedObjects.getSOPortType());
         } catch (Exception e) {
             s.assertFailed("Could not start ibis: ", e);
         }
@@ -69,8 +70,9 @@ public final class Communication implements Config, Protocol {
         try {
             MessageHandler messageHandler = new MessageHandler(s);
 
-            receivePort = ibis.createReceivePort(portType, "satin port",
-                    messageHandler, s.ft.getReceivePortConnectHandler(), null);
+            receivePort =
+                ibis.createReceivePort(portType, "satin port", messageHandler,
+                    s.ft.getReceivePortConnectHandler(), null);
         } catch (Exception e) {
             s.assertFailed("Could not start ibis: ", e);
         }
@@ -84,45 +86,66 @@ public final class Communication implements Config, Protocol {
         }
     }
 
-    public IbisIdentifier elect(String election) {
+    public IbisIdentifier electMaster() {
+        String election = "satin.master";
         Registry r = ibis.registry();
         IbisIdentifier winner = null;
 
         String canonicalMasterHost = null;
         String localHostName = null;
 
-        if (MASTER_HOST != null) {
-            try {
-                InetAddress a = InetAddress.getByName(MASTER_HOST);
-                canonicalMasterHost = a.getCanonicalHostName();
-            } catch (Exception e) {
-                commLogger.warn("satin.masterhost is set to an unknown "
-                        + "name: " + MASTER_HOST);
-                commLogger.warn("continuing with default election");
-            }
-            try {
-                localHostName = InetAddress.getLocalHost()
-                    .getCanonicalHostName();
-            } catch (Exception e) {
-                commLogger.warn("Could not get local hostname");
-                canonicalMasterHost = null;
-            }
-
-            try {
-                if (canonicalMasterHost == null
-                        || !canonicalMasterHost.equals(localHostName)) {
-                    winner = r.getElectionResult(election);
-                } else {
-                    winner = r.elect(election);
+        while (winner == null) {
+            if (MASTER_HOST != null) {
+                try {
+                    InetAddress a = InetAddress.getByName(MASTER_HOST);
+                    canonicalMasterHost = a.getCanonicalHostName();
+                } catch (Exception e) {
+                    commLogger.warn("satin.masterhost is set to an unknown "
+                            + "name: " + MASTER_HOST);
+                    commLogger.warn("continuing with default election");
                 }
-            } catch (Exception e) {
-                s.assertFailed("Could not do an election for " + election + ": ", e);
+                try {
+                    localHostName =
+                        InetAddress.getLocalHost().getCanonicalHostName();
+                } catch (Exception e) {
+                    commLogger.warn("Could not get local hostname");
+                    canonicalMasterHost = null;
+                }
+
+                try {
+                    if (canonicalMasterHost == null
+                            || !canonicalMasterHost.equals(localHostName)) {
+                        winner = r.getElectionResult(election);
+                    } else {
+                        winner = r.elect(election);
+                    }
+                } catch (Exception e) {
+                    s.assertFailed("Could not do an election for " + election
+                            + ": ", e);
+                }
+            } else {
+                try {
+                    winner = r.elect(election);
+                } catch (Exception e) {
+                    s.assertFailed("Could not do an election for " + election
+                            + ": ", e);
+                }
             }
-        } else {
+        }
+
+        return winner;
+    }
+
+    public IbisIdentifier elect(String election) {
+        Registry r = ibis.registry();
+        IbisIdentifier winner = null;
+
+        while (winner == null) {
             try {
                 winner = r.elect(election);
             } catch (Exception e) {
-                s.assertFailed("Could not do an election for " + election + ": ", e);
+                s.assertFailed("Could not do an election for " + election
+                        + ": ", e);
             }
         }
 
@@ -135,20 +158,29 @@ public final class Communication implements Config, Protocol {
     }
 
     public IbisCapabilities createIbisProperties() {
-        if (CLOSED) {
-            return new IbisCapabilities(
-                    IbisCapabilities.CLOSED_WORLD,
-                    IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED,
-                    IbisCapabilities.ELECTIONS_STRICT);
+        String elections;
+
+        if (MASTER_HOST != null) {
+            // Niels: since we already know the master, we can do with 
+            // unreliable elections
+            elections = IbisCapabilities.ELECTIONS_UNRELIABLE;
+        } else {
+            // we need "reliable" elections to select the master
+            elections = IbisCapabilities.ELECTIONS_STRICT;
         }
-        return new IbisCapabilities(
-                IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED,
-                IbisCapabilities.ELECTIONS_STRICT);
+
+        if (CLOSED) {
+            return new IbisCapabilities(IbisCapabilities.CLOSED_WORLD,
+                    IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED, elections);
+        }
+        //FIXME: this breaks LRMC!!!
+        return new IbisCapabilities(IbisCapabilities.MEMBERSHIP_UNRELIABLE,
+                elections);
     }
 
     public PortType createSatinPortType() {
-        return new PortType(
-                PortType.SERIALIZATION_OBJECT, PortType.COMMUNICATION_RELIABLE,
+        return new PortType(PortType.SERIALIZATION_OBJECT,
+                PortType.COMMUNICATION_RELIABLE,
                 PortType.CONNECTION_MANY_TO_ONE, PortType.CONNECTION_UPCALLS,
                 PortType.RECEIVE_EXPLICIT, PortType.RECEIVE_AUTO_UPCALLS);
     }
@@ -163,8 +195,7 @@ public final class Communication implements Config, Protocol {
             WriteMessage writeMessage = null;
             Victim v = victims[i];
             commLogger.debug("SATIN '" + s.ident + "': sending "
-                    + opcodeToString(opcode) + " message to "
-                    + v.getIdent());
+                    + opcodeToString(opcode) + " message to " + v.getIdent());
             try {
                 writeMessage = v.newMessage();
                 writeMessage.writeByte(opcode);
@@ -204,13 +235,14 @@ public final class Communication implements Config, Protocol {
         long timeLeft = deadLine - System.currentTimeMillis();
         ReceivePortIdentifier r = null;
         IbisIdentifier id = s.identifier().ibisIdentifier();
-        connLogger.info("SATIN '" + id + "': connecting to " + name + " at " + ident);
+        connLogger.info("SATIN '" + id + "': connecting to " + name + " at "
+                + ident);
         while (r == null && timeLeft > 0) {
             try {
                 r = s.connect(ident, name, timeLeft, false);
             } catch (AlreadyConnectedException x) {
-                connLogger.info("SATIN '" + id
-                        + "': already connected to " + name + " at " + ident, x);
+                connLogger.info("SATIN '" + id + "': already connected to "
+                        + name + " at " + ident, x);
                 ReceivePortIdentifier[] ports = s.connectedTo();
                 for (int i = 0; i < ports.length; i++) {
                     if (ports[i].ibisIdentifier().equals(ident)
@@ -218,13 +250,14 @@ public final class Communication implements Config, Protocol {
                         connLogger.info("SATIN '" + id
                                 + "': the port was already connected, found it");
                         return ports[i];
-                            }
+                    }
                 }
-                connLogger.info("SATIN '" + id
+                connLogger.info("SATIN '"
+                        + id
                         + "': the port was already connected, but could not find it, retry!");
                 // return null;
             } catch (IOException e) {
-                connLogger.info( "SATIN '" + id
+                connLogger.info("SATIN '" + id
                         + "': IOException in connect to " + ident + ": " + e, e);
                 try {
                     Thread.sleep(500);
@@ -236,7 +269,8 @@ public final class Communication implements Config, Protocol {
         }
 
         if (r == null) {
-            connLogger.info("could not connect port within given time (" + timeoutMillis + " ms)");
+            connLogger.info("could not connect port within given time ("
+                    + timeoutMillis + " ms)");
         }
         return r;
     }
@@ -272,14 +306,15 @@ public final class Communication implements Config, Protocol {
                         v = s.victims.getVictim(i);
                     }
                     if (v == null) {
-                        s.assertFailed("a machine crashed with closed world", new Exception());
+                        s.assertFailed("a machine crashed with closed world",
+                            new Exception());
                     }
 
                     try {
                         writeMessage = v.newMessage();
                         writeMessage.writeByte(Protocol.BARRIER_REPLY);
                         v.finish(writeMessage);
-                    } catch(IOException e) {
+                    } catch (IOException e) {
                         if (writeMessage != null) {
                             writeMessage.finish(e);
                         }
@@ -294,7 +329,8 @@ public final class Communication implements Config, Protocol {
                 }
 
                 if (v == null) {
-                    s.assertFailed("could not get master victim.",new Exception());
+                    s.assertFailed("could not get master victim.",
+                        new Exception());
                 }
 
                 WriteMessage writeMessage = null;
@@ -302,7 +338,7 @@ public final class Communication implements Config, Protocol {
                     writeMessage = v.newMessage();
                     writeMessage.writeByte(Protocol.BARRIER_REQUEST);
                     writeMessage.finish();
-                } catch(IOException e) {
+                } catch (IOException e) {
                     if (writeMessage != null) {
                         writeMessage.finish(e);
                     }
@@ -371,8 +407,9 @@ public final class Communication implements Config, Protocol {
             if (writeMessage != null) {
                 writeMessage.finish(e);
             }
-            ftLogger.info("SATIN '" + s.ident
-                    + "': could not send exit message to " + s.getMasterIdent(), e);
+            ftLogger.info(
+                "SATIN '" + s.ident + "': could not send exit message to "
+                        + s.getMasterIdent(), e);
             try {
                 ibis.registry().maybeDead(s.getMasterIdent());
             } catch (IOException e2) {
@@ -603,48 +640,50 @@ public final class Communication implements Config, Protocol {
 
         throw new Error("unknown opcode in opcodeToString");
     }
-    
+
     // FIXME send a resume after a crash
-    
+
     public void pause() {
         paused = true;
-        
+
         soBcastLogger.info("SATIN '" + s.ident + "': sending pause");
         Victim[] victims;
         synchronized (s) {
             victims = s.victims.victims();
-            
+
         }
-        for(int i=0; i<victims.length; i++) {
+        for (int i = 0; i < victims.length; i++) {
             try {
                 WriteMessage m = victims[i].newMessage();
                 m.writeByte(PAUSE);
                 victims[i].finish(m);
             } catch (IOException e) {
-                commLogger.warn("SATIN '" + s.ident + "': could not send pause message: " + e);
+                commLogger.warn("SATIN '" + s.ident
+                        + "': could not send pause message: " + e);
                 // ignore
             }
         }
     }
-    
+
     public void resume() {
         soBcastLogger.info("SATIN '" + s.ident + "': sending resume");
 
         Victim[] victims;
         synchronized (s) {
             victims = s.victims.victims();
-            
+
         }
-        for(int i=0; i<victims.length; i++) {
+        for (int i = 0; i < victims.length; i++) {
             try {
                 WriteMessage m = victims[i].newMessage();
                 m.writeByte(RESUME);
                 victims[i].finish(m);
             } catch (IOException e) {
-                commLogger.info("SATIN '" + s.ident + "': could not send pause message: " + e);
+                commLogger.info("SATIN '" + s.ident
+                        + "': could not send pause message: " + e);
                 // ignore
             }
-            
+
         }
         paused = false;
     }
@@ -657,13 +696,13 @@ public final class Communication implements Config, Protocol {
             s.notifyAll();
         }
     }
-    
+
     void gotResume() {
         soBcastLogger.debug("SATIN '" + s.ident + "': got resume");
 
         synchronized (s) {
             paused = false;
             s.notifyAll();
-        }        
+        }
     }
 }

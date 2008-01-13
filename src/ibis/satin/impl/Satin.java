@@ -126,7 +126,7 @@ public final class Satin implements Config {
         aborts = new Aborts(this);
 
         // elect the master
-        setMaster(comm.elect("satin master"));
+        setMaster(comm.electMaster());
 
         createLoadBalancingAlgorithm();
 
