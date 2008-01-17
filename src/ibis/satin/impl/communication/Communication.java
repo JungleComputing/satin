@@ -123,6 +123,13 @@ public final class Communication implements Config, Protocol {
                     s.assertFailed("Could not do an election for " + election
                             + ": ", e);
                 }
+            } else if (CLIENT) {
+                try {
+                    winner = r.getElectionResult(election);
+                } catch (Exception e) {
+                    s.assertFailed("Could not do an election for " + election
+                            + ": ", e);
+                }
             } else {
                 try {
                     winner = r.elect(election);
