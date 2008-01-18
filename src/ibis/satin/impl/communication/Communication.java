@@ -167,15 +167,8 @@ public final class Communication implements Config, Protocol {
     public IbisCapabilities createIbisProperties() {
         String elections;
 
-        if (MASTER_HOST != null) {
-            // Niels: since we already know the master, we can do with 
-            // unreliable elections
-            elections = IbisCapabilities.ELECTIONS_UNRELIABLE;
-        } else {
-            // we need "reliable" elections to select the master
-            elections = IbisCapabilities.ELECTIONS_STRICT;
-        }
-
+        elections = IbisCapabilities.ELECTIONS_UNRELIABLE;
+        
         if (CLOSED) {
             return new IbisCapabilities(IbisCapabilities.CLOSED_WORLD,
                     IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED, elections);
