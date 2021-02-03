@@ -215,7 +215,7 @@ public interface Config {
     static final boolean SO_ENABLED = properties.getBooleanProperty(s_so, true);
 
     /**
-     * Maximum time that messages may be buffered for message combining. If > 0,
+     * Maximum time that messages may be buffered for message combining. If smaller than 0,
      * it is used for combining shared objects invocations. setting this to 0
      * disables message combining.
      */
