@@ -320,6 +320,7 @@ public class SyncRewriter extends IbiscComponent {
 	}
     }
 
+    @SuppressWarnings("unused")
     public boolean processArgs(ArrayList<String> args) {
 
 	boolean retval = false;

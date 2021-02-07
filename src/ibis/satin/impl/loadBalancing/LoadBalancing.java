@@ -41,11 +41,12 @@ public final class LoadBalancing implements Config {
 	    }
 
 	    while (true) {
-		if (CONTINUOUS_STATS
-			&& System.currentTimeMillis() - lastPrintTime > CONTINUOUS_STATS_INTERVAL) {
-		    lastPrintTime = System.currentTimeMillis();
-		    s.stats.printDetailedStats(s.ident);
-		}
+		if (CONTINUOUS_STATS) {
+                    if (System.currentTimeMillis() - lastPrintTime > CONTINUOUS_STATS_INTERVAL) {
+                        lastPrintTime = System.currentTimeMillis();
+                        s.stats.printDetailedStats(s.ident);
+                    }
+            }
 
 		StealRequest sr = null;
 		if (stealLogger.isDebugEnabled()) {

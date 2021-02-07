@@ -44,8 +44,6 @@ import org.apache.bcel.verifier.structurals.InstructionContext;
  */
 public class MethodGen extends org.apache.bcel.generic.MethodGen {
 
-    private static final long serialVersionUID = 1L;
-
     private static boolean EXACT = true;
 
     protected int parameterPos;

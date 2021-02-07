@@ -16,7 +16,6 @@ public class StoreLoadPath extends Path {
 
     private InstructionHandle storeInstruction;
     private LocalVariableGen[] localVariableIndices;
-    private boolean aliasProblem = false;
 
     /* package methods */
 
@@ -26,7 +25,6 @@ public class StoreLoadPath extends Path {
 	add(block);
 	this.storeInstruction = storeInstruction;
 	this.localVariableIndices = localVariableIndices;
-	aliasProblem = true;
     }
 
     StoreLoadPath(InstructionHandle storeInstruction, Path path,

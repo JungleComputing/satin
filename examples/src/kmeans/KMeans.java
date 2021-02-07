@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 public class KMeans extends ibis.satin.SatinObject implements KMeansInterface {
+    private static final long serialVersionUID = 1L;
     public static final double THRESHOLD = 0.01;
     public static final int MAXITER = 500;
 

@@ -1,1 +1,5 @@
 /bin/
+/.classpath
+/.eclipse-dictionary
+/.project
+/.gradle

@@ -314,6 +314,7 @@ final class LBCommunication implements Config, Protocol {
 
     // Here, the timing code is OK, the upcall cannot run in parallel
     // (readmessage is not finished).
+    @SuppressWarnings("unlikely-arg-type")
     protected void handleReply(ReadMessage m, int opcode) {
 	SendPortIdentifier ident = m.origin();
 	InvocationRecord tmp = null;

@@ -28,8 +28,6 @@ import org.apache.bcel.generic.ReferenceType;
  */
 public class SpawningMethod extends MethodGen {
 
-    private static final long serialVersionUID = 1L;
-
     private class ResultNotStored extends Exception {
 
 	private static final long serialVersionUID = 1L;

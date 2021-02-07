@@ -10,8 +10,6 @@ import org.apache.bcel.generic.ClassGen;
 
 class SpawningClass extends ClassGen {
 
-    private static final long serialVersionUID = 1L;
-
     private SpawnSignature[] spawnSignatures;
     private Debug d;
     private boolean hasMethodsThatCallSync = false;

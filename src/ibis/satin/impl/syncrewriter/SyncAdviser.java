@@ -106,6 +106,7 @@ public class SyncAdviser extends SyncRewriter {
 	System.exit(0);
     }
 
+    @SuppressWarnings("unused")
     public boolean processArgs(ArrayList<String> args) {
 	boolean retval = false;
 	for (int i = 0; i < args.size(); i++) {

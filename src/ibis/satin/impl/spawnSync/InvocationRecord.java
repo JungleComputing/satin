@@ -15,6 +15,8 @@ import ibis.satin.impl.sharedObjects.SOReferenceSourceCrashedException;
  */
 public abstract class InvocationRecord implements java.io.Serializable, Config {
 
+    private static final long serialVersionUID = 2556301758852095607L;
+
     /**
      * Must be public, it is used from the generated code (in another package)
      */

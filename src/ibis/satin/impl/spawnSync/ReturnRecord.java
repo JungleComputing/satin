@@ -10,6 +10,8 @@ package ibis.satin.impl.spawnSync;
  * parameters from being serialized and sent over the network twice.
  */
 public abstract class ReturnRecord implements java.io.Serializable {
+    private static final long serialVersionUID = -7590742579792859473L;
+
     protected Stamp stamp;
 
     /**

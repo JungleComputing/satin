@@ -100,6 +100,7 @@ import ibis.compile.IbiscComponent;
 //     exception handler in non-clone is unreachable, delete.
 //     Initializations of locals. delete if not needed.
 
+@SuppressWarnings("deprecation")
 public final class Satinc extends IbiscComponent {
     private JavaClass satinObjectClass;
 
@@ -207,10 +208,6 @@ public final class Satinc extends IbiscComponent {
 
         public Method getMethod() {
             return target;
-        }
-
-        public String getClassName() {
-            return className;
         }
 
         public String getClassNameNoPackage() {
@@ -2896,6 +2893,7 @@ public final class Satinc extends IbiscComponent {
         }
     }
 
+    @SuppressWarnings("unused")
     public boolean processArgs(ArrayList<String> args) {
         boolean retval = false;
         for (int i = 0; i < args.size(); i++) {

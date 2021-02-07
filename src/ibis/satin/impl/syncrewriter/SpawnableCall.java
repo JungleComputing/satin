@@ -139,14 +139,4 @@ public class SpawnableCall {
 	this.indicesStores = null;
 	this.type = type;
     }
-
-    /* Should be for more common class */
-
-    private boolean contains(Integer[] array, int x) {
-	for (int i = 0; i < array.length; i++) {
-	    if (array[i] == x)
-		return true;
-	}
-	return false;
-    }
 }

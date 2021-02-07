@@ -1,6 +1,7 @@
 package kmeans;
 
 public class Points extends ibis.satin.SharedObject {
+    private static final long serialVersionUID = 1L;
 
     private double[][] points;
 
