@@ -3,7 +3,6 @@
 package ibis.satin.impl.loadBalancing;
 
 import ibis.ipl.IbisIdentifier;
-import ibis.satin.impl.Config;
 import ibis.satin.impl.Satin;
 import ibis.satin.impl.communication.Protocol;
 import ibis.satin.impl.spawnSync.InvocationRecord;
@@ -11,7 +10,7 @@ import ibis.satin.impl.spawnSync.InvocationRecord;
 import java.io.IOException;
 
 public final class ClusterAwareRandomWorkStealing extends
-	LoadBalancingAlgorithm implements Protocol, Config {
+	LoadBalancingAlgorithm implements Protocol {
 
     private Satin s;
 

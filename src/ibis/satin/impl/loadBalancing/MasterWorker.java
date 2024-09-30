@@ -2,14 +2,12 @@
 
 package ibis.satin.impl.loadBalancing;
 
-import ibis.satin.impl.Config;
 import ibis.satin.impl.Satin;
 import ibis.satin.impl.spawnSync.InvocationRecord;
 
 /** The master-worker distribution algorithm. */
 
-public final class MasterWorker extends LoadBalancingAlgorithm implements
-	Config {
+public final class MasterWorker extends LoadBalancingAlgorithm {
 
     public MasterWorker(Satin s) {
 	super(s);

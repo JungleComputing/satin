@@ -3,6 +3,7 @@ package ibis.satin.impl.syncrewriter;
 import ibis.compile.IbiscComponent;
 import ibis.satin.impl.syncrewriter.util.Debug;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
@@ -178,23 +179,25 @@ public class SyncRewriter extends IbiscComponent {
 		throw new Error(e);
 	    } catch (IllegalAccessException e) {
 		throw new Error(e);
-	    }
+	    } catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e);
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		}
 	}
     }
 
     void setAnalyzer(String analyzerName) {
-	try {
-	    analyzer = AnalyzerFactory.createAnalyzer(analyzerName);
-	} catch (ClassNotFoundException e) {
-	    System.out.printf("Loading analyzer failed: %s\n", e.getMessage());
-	    System.exit(1);
-	} catch (InstantiationException e) {
-	    System.out.printf("Loading analyzer failed: %s\n", e.getMessage());
-	    System.exit(1);
-	} catch (IllegalAccessException e) {
-	    System.out.printf("Loading analyzer failed: %s\n", e.getMessage());
-	    System.exit(1);
-	}
+		try {
+			analyzer = AnalyzerFactory.createAnalyzer(analyzerName);
+		} catch (IllegalAccessException | IllegalArgumentException | ClassNotFoundException | NoSuchMethodException |InstantiationException |SecurityException | InvocationTargetException e) {
+			System.out.printf("Loading analyzer failed: %s\n", e.getMessage());
+			System.exit(1);
+		}
     }
 
     void printUsage() {
