@@ -215,12 +215,6 @@ public final class Satin implements Config {
 	    commLogger.debug("SATIN '" + ident + "': exited");
 	}
 
-	// Do a gc, and run the finalizers. Useful for printing statistics in
-	// Satin applications.
-	// The app should register a shutdownhook. --Rob
-	System.gc();
-	System.runFinalization();
-
 	if (status != 0) {
 	    System.exit(status);
 	}
