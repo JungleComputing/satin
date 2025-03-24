@@ -11,17 +11,18 @@ class DeleteThread extends Thread {
     // private String cluster = null;
 
     DeleteThread(int time) {
-	super("SatinDeleteThread");
-	this.milis = 1000 * time;
+        super("SatinDeleteThread");
+        this.milis = 1000 * time;
     }
 
+    @Override
     public void run() {
-	try {
-	    sleep(milis);
-	} catch (InterruptedException e) {
-	    // ignore
-	}
-	Satin satin = Satin.getSatin();
-	satin.ft.ftComm.gotSignal("delete", null);
+        try {
+            sleep(milis);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        Satin satin = Satin.getSatin();
+        satin.ft.ftComm.gotSignal("delete", null);
     }
 }

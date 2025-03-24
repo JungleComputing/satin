@@ -7,10 +7,10 @@ class NeverReadException extends Exception {
     static final String MESSAGE = "The result is never read";
 
     NeverReadException() {
-	super(MESSAGE);
+        super(MESSAGE);
     }
 
     NeverReadException(String message) {
-	super(MESSAGE + ", " + message);
+        super(MESSAGE + ", " + message);
     }
 }

@@ -43,8 +43,7 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
     private Stamp parentStamp;
 
     /**
-     * The invocation record of my parent (can be null for root and stolen
-     * jobs).
+     * The invocation record of my parent (can be null for root and stolen jobs).
      */
     protected transient InvocationRecord parent;
 
@@ -56,8 +55,8 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
     public transient boolean aborted;
 
     /**
-     * An id for the store where the result of the spawn must go. Must be
-     * public, used by generated code.
+     * An id for the store where the result of the spawn must go. Must be public,
+     * used by generated code.
      */
     public transient int storeId;
 
@@ -120,130 +119,123 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
      **/
     private boolean orphan;
 
-    protected InvocationRecord(SpawnCounter spawnCounter,
-	    InvocationRecord cacheNext, int storeId, int spawnId,
-	    LocalRecord parentLocals) {
-	init(spawnCounter, cacheNext, storeId, spawnId, parentLocals);
+    protected InvocationRecord(SpawnCounter spawnCounter, InvocationRecord cacheNext, int storeId, int spawnId, LocalRecord parentLocals) {
+        init(spawnCounter, cacheNext, storeId, spawnId, parentLocals);
     }
 
     /** Used for the invocation record cache. */
-    final protected void init(SpawnCounter spawnCounter,
-	    InvocationRecord cacheNext, int storeId, int spawnId,
-	    LocalRecord parentLocals) {
-	this.storeId = storeId;
-	this.cacheNext = cacheNext;
-	this.spawnCounter = spawnCounter;
-	this.spawnId = spawnId;
-	this.parentLocals = parentLocals;
+    final protected void init(SpawnCounter spawnCounter, InvocationRecord cacheNext, int storeId, int spawnId, LocalRecord parentLocals) {
+        this.storeId = storeId;
+        this.cacheNext = cacheNext;
+        this.spawnCounter = spawnCounter;
+        this.spawnId = spawnId;
+        this.parentLocals = parentLocals;
     }
 
     /** Used for the invocation record cache. */
     final protected void clear() {
-	owner = null;
-	Stamp.deleteStamp(stamp);
-	stamp = null;
-	spawnCounter = null;
+        owner = null;
+        Stamp.deleteStamp(stamp);
+        stamp = null;
+        spawnCounter = null;
 
-	qprev = null;
-	setQnext(null);
+        qprev = null;
+        setQnext(null);
 
-	storeId = -2;
-	stealer = null;
+        storeId = -2;
+        stealer = null;
 
-	eek = null;
-	parentOwner = null;
-	parentStamp = null;
-	parent = null;
-	aborted = false;
-	spawnId = -2;
-	parentLocals = null;
+        eek = null;
+        parentOwner = null;
+        parentStamp = null;
+        parent = null;
+        aborted = false;
+        spawnId = -2;
+        parentLocals = null;
 
-	alreadySentExceptionResult = false;
-	inletExecuted = false;
-	reDone = false;
-	finishedChild = null;
-	finishedSibling = null;
-	toBeRestartedChild = null;
-	toBeRestartedSibling = null;
+        alreadySentExceptionResult = false;
+        inletExecuted = false;
+        reDone = false;
+        finishedChild = null;
+        finishedSibling = null;
+        toBeRestartedChild = null;
+        toBeRestartedSibling = null;
     }
 
     /**
      * Compares this invocation record with another invocation record. Returns
      * <code>true</code> if equal.
-     * 
-     * @param other
-     *            the invocation record to compare with.
+     *
+     * @param other the invocation record to compare with.
      * @return <code>true</code> if equal, <code>false</code> if not.
      */
     public final boolean equals(InvocationRecord other) {
-	if (other == this) {
-	    return true;
-	}
-	return stamp.stampEquals(other.stamp) && owner.equals(other.owner);
+        if (other == this) {
+            return true;
+        }
+        return stamp.stampEquals(other.stamp) && owner.equals(other.owner);
     }
 
     /**
      * Compares this invocation record with another object. Returns
      * <code>true</code> if equal.
-     * 
-     * @param o
-     *            the object to compare with.
+     *
+     * @param o the object to compare with.
      * @return <code>true</code> if equal, <code>false</code> if not.
      */
+    @Override
     public final boolean equals(Object o) {
-	if (o == this) {
-	    return true;
-	}
-	if (o instanceof InvocationRecord) {
-	    InvocationRecord other = (InvocationRecord) o;
-	    return stamp.stampEquals(other.stamp) && owner.equals(other.owner);
-	}
-	if (Config.ASSERTS) {
-	    System.out.println("warning: weird equals in Invocationrecord");
-	}
-	return false;
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof InvocationRecord) {
+            InvocationRecord other = (InvocationRecord) o;
+            return stamp.stampEquals(other.stamp) && owner.equals(other.owner);
+        }
+        if (Config.ASSERTS) {
+            System.out.println("warning: weird equals in Invocationrecord");
+        }
+        return false;
     }
 
     /**
      * Returns a hashcode that conforms with the <code>equals</code> method.
-     * 
+     *
      * @return a hashcode.
      */
+    @Override
     final public int hashCode() {
-	return stamp.hashCode();
+        return stamp.hashCode();
     }
 
     /**
      * Returns a string representation of this invocation record.
-     * 
+     *
      * @return a string representation of this invocation record.
      */
+    @Override
     public String toString() {
-	String result = "(Invocation record: stamp = " + stamp;
-	result += ", owner = " + (owner == null ? "NULL" : "" + owner);
-	result += ", spawnCounter = "
-		+ (spawnCounter == null ? "NULL" : "" + spawnCounter.getValue());
-	result += ", stealer = " + stealer;
-	result += ", parentStamp = " + parentStamp;
-	result += ", parentOwner = "
-		+ (parentOwner == null ? "NULL" : "" + parentOwner);
-	result += ", aborted = " + aborted;
-	result += ", parent = " + (parent == null ? "NULL" : "" + parent);
-	// recursive :-)
-	result += ", parentLocals = "
-		+ (parentLocals == null ? "NULL" : "" + parentLocals) + ")";
+        String result = "(Invocation record: stamp = " + stamp;
+        result += ", owner = " + (owner == null ? "NULL" : "" + owner);
+        result += ", spawnCounter = " + (spawnCounter == null ? "NULL" : "" + spawnCounter.getValue());
+        result += ", stealer = " + stealer;
+        result += ", parentStamp = " + parentStamp;
+        result += ", parentOwner = " + (parentOwner == null ? "NULL" : "" + parentOwner);
+        result += ", aborted = " + aborted;
+        result += ", parent = " + (parent == null ? "NULL" : "" + parent);
+        // recursive :-)
+        result += ", parentLocals = " + (parentLocals == null ? "NULL" : "" + parentLocals) + ")";
 
-	return result;
+        return result;
     }
 
     public abstract ReturnRecord getReturnRecord();
 
     /**
-     * initializes the references to shared objects inside this invocation
-     * record after stealing the job
+     * initializes the references to shared objects inside this invocation record
+     * after stealing the job
      */
-    public abstract void setSOReferences()
-	    throws SOReferenceSourceCrashedException;
+    public abstract void setSOReferences() throws SOReferenceSourceCrashedException;
 
     /**
      * Returns a list of objectIds of the shared objects this record holds
@@ -253,7 +245,7 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
 
     /** Executes the guard function, used for shared objects consistency. */
     public boolean guard() {
-	return true;
+        return true;
     }
 
     public abstract void runLocal() throws Throwable;
@@ -263,124 +255,122 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
     public abstract void clearParams();
 
     public final IbisIdentifier getOwner() {
-	return owner;
+        return owner;
     }
 
     public final void setOwner(IbisIdentifier owner) {
-	this.owner = owner;
+        this.owner = owner;
     }
 
     public final Stamp getStamp() {
-	return stamp;
+        return stamp;
     }
 
     public final InvocationRecord getParent() {
-	return parent;
+        return parent;
     }
 
     public final IbisIdentifier getParentOwner() {
-	return parentOwner;
+        return parentOwner;
     }
 
     public final Stamp getParentStamp() {
-	return parentStamp;
+        return parentStamp;
     }
 
     public final void decrSpawnCounter() {
-	if (spawnCounter != null) {
-	    // Can be null in case of stolen job.
-	    spawnCounter.decr(this);
-	}
+        if (spawnCounter != null) {
+            // Can be null in case of stolen job.
+            spawnCounter.decr(this);
+        }
     }
 
     public final void incrSpawnCounter() {
-	spawnCounter.incr(this);
+        spawnCounter.incr(this);
     }
 
     public final void setStealer(IbisIdentifier stealer) {
-	this.stealer = stealer;
+        this.stealer = stealer;
     }
 
     public final IbisIdentifier getStealer() {
-	return stealer;
+        return stealer;
     }
 
     public final void setFinishedChild(InvocationRecord finishedChild) {
-	this.finishedChild = finishedChild;
+        this.finishedChild = finishedChild;
     }
 
     public final InvocationRecord getFinishedChild() {
-	return finishedChild;
+        return finishedChild;
     }
 
     public final void setFinishedSibling(InvocationRecord finishedSibling) {
-	this.finishedSibling = finishedSibling;
+        this.finishedSibling = finishedSibling;
     }
 
     public final InvocationRecord getFinishedSibling() {
-	return finishedSibling;
+        return finishedSibling;
     }
 
     public final void setToBeRestartedChild(InvocationRecord toBeRestartedChild) {
-	this.toBeRestartedChild = toBeRestartedChild;
+        this.toBeRestartedChild = toBeRestartedChild;
     }
 
     public final InvocationRecord getToBeRestartedChild() {
-	return toBeRestartedChild;
+        return toBeRestartedChild;
     }
 
-    public final void setToBeRestartedSibling(
-	    InvocationRecord toBeRestartedSibling) {
-	this.toBeRestartedSibling = toBeRestartedSibling;
+    public final void setToBeRestartedSibling(InvocationRecord toBeRestartedSibling) {
+        this.toBeRestartedSibling = toBeRestartedSibling;
     }
 
     public final InvocationRecord getToBeRestartedSibling() {
-	return toBeRestartedSibling;
+        return toBeRestartedSibling;
     }
 
     public final void setReDone(boolean reDone) {
-	this.reDone = reDone;
+        this.reDone = reDone;
     }
 
     public final boolean isReDone() {
-	return reDone;
+        return reDone;
     }
 
     public final void setOrphan(boolean orphan) {
-	this.orphan = orphan;
+        this.orphan = orphan;
     }
 
     public final boolean isOrphan() {
-	return orphan;
+        return orphan;
     }
 
     public final int getSpawnId() {
-	return spawnId;
+        return spawnId;
     }
 
     protected final void setParentLocals(LocalRecord parentLocals) {
-	this.parentLocals = parentLocals;
+        this.parentLocals = parentLocals;
     }
 
     public final LocalRecord getParentLocals() {
-	return parentLocals;
+        return parentLocals;
     }
 
-    public final void setAlreadySentExceptionResult(
-	    boolean alreadySentExceptionResult) {
-	this.alreadySentExceptionResult = alreadySentExceptionResult;
+    public final void setAlreadySentExceptionResult(boolean alreadySentExceptionResult) {
+        this.alreadySentExceptionResult = alreadySentExceptionResult;
     }
 
     public final boolean alreadySentExceptionResult() {
-	return alreadySentExceptionResult;
+        return alreadySentExceptionResult;
     }
 
     public final void setInletExecuted(boolean inletExecuted) {
-	this.inletExecuted = inletExecuted;
+        this.inletExecuted = inletExecuted;
     }
 
     public final boolean isInletExecuted() {
-	return inletExecuted;
+        return inletExecuted;
     }
 
     /**
@@ -388,69 +378,69 @@ public abstract class InvocationRecord implements java.io.Serializable, Config {
      * indicated by the specied stamp.
      */
     public final boolean isDescendentOf(Stamp targetStamp) {
-	if (parentStamp == null) {
-	    if (targetStamp == null) {
-		return true;
-	    }
-	    return false;
-	}
-	return parentStamp.isDescendentOf(targetStamp);
+        if (parentStamp == null) {
+            if (targetStamp == null) {
+                return true;
+            }
+            return false;
+        }
+        return parentStamp.isDescendentOf(targetStamp);
     }
 
     public final boolean isDescendentOf(IbisIdentifier targetOwner) {
-	if (parent == null) {
-	    return false;
-	}
+        if (parent == null) {
+            return false;
+        }
 
-	if (parentOwner.equals(targetOwner)) {
-	    return true;
-	}
-	return parent.isDescendentOf(targetOwner);
+        if (parentOwner.equals(targetOwner)) {
+            return true;
+        }
+        return parent.isDescendentOf(targetOwner);
     }
 
     /**
      * Attach a child to its parent's finished children list.
      */
     public final void jobFinished() {
-	if (!FT_NAIVE) {
-	    // Only needed if the GRT is used.
-	    if (parent != null) {
-		finishedSibling = parent.finishedChild;
-		parent.finishedChild = this;
-	    }
+        if (!FT_NAIVE) {
+            // Only needed if the GRT is used.
+            if (parent != null) {
+                finishedSibling = parent.finishedChild;
+                parent.finishedChild = this;
+            }
 
-	    // remove the job's children list
-	    finishedChild = null;
-	}
+            // remove the job's children list
+            finishedChild = null;
+        }
     }
 
     public final void spawn(IbisIdentifier ident, InvocationRecord parent) {
-	owner = ident;
-	this.parent = parent;
-	if (parent == null) {
-	    parentStamp = null;
-	    parentOwner = null;
-	} else {
-	    parentStamp = parent.stamp;
-	    parentOwner = parent.owner;
-	}
-	stamp = Stamp.createStamp(parentStamp);
-	spawnCounter.incr(this);
+        owner = ident;
+        this.parent = parent;
+        if (parent == null) {
+            parentStamp = null;
+            parentOwner = null;
+        } else {
+            parentStamp = parent.stamp;
+            parentOwner = parent.owner;
+        }
+        stamp = Stamp.createStamp(parentStamp);
+        spawnCounter.incr(this);
     }
 
     protected final void setQprev(InvocationRecord qprev) {
-	this.qprev = qprev;
+        this.qprev = qprev;
     }
 
     protected final InvocationRecord getQprev() {
-	return qprev;
+        return qprev;
     }
 
     protected final void setQnext(InvocationRecord qnext) {
-	this.qnext = qnext;
+        this.qnext = qnext;
     }
 
     protected final InvocationRecord getQnext() {
-	return qnext;
+        return qnext;
     }
 }

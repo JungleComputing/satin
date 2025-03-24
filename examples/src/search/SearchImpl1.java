@@ -6,10 +6,12 @@ class SearchImpl1 extends SatinObject implements Searcher {
 
     private static final long serialVersionUID = 1L;
 
+    @Override
     public int search(int a[], int from, int to, int val) {
         for (int i = from; i < to; i++) {
-            if (a[i] == val)
+            if (a[i] == val) {
                 return i;
+            }
         }
         return -1;
     }

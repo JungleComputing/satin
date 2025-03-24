@@ -13,9 +13,9 @@ public class Checkpoint implements java.io.Serializable {
 
     /**
      * if serialVersionUID is not defined here, java redefines it for every new
-     * build of Satin. Different serialVersionUID's can't be read by different
-     * Satin builds. That would make checkpoint files created by a different
-     * satin build useless
+     * build of Satin. Different serialVersionUID's can't be read by different Satin
+     * builds. That would make checkpoint files created by a different satin build
+     * useless
      **/
     private static final long serialVersionUID = 12345;
 
@@ -24,7 +24,7 @@ public class Checkpoint implements java.io.Serializable {
     public IbisIdentifier sender;
 
     public Checkpoint(ReturnRecord rr, IbisIdentifier sender) {
-	this.rr = rr;
-	this.sender = sender;
+        this.rr = rr;
+        this.sender = sender;
     }
 }

@@ -7,9 +7,11 @@ public class FibWithoutSync extends ibis.satin.SatinObject implements FibInterfa
 
     private static final long serialVersionUID = -2084766268168809118L;
 
+    @Override
     public long fib(int n) {
-        if (n < 2)
+        if (n < 2) {
             return n;
+        }
 
         long x = fib(n - 1);
         long y = fib(n - 2);
@@ -43,7 +45,6 @@ public class FibWithoutSync extends ibis.satin.SatinObject implements FibInterfa
         System.out.println("application result fib (" + n + ") = " + result);
         double time = (System.currentTimeMillis() - start) / 1000.0;
 
-        System.out.println("application time fib (" + n + ") took " + time
-                + " s");
+        System.out.println("application time fib (" + n + ") took " + time + " s");
     }
 }

@@ -7,10 +7,10 @@ class NoSpawningMethodException extends Exception {
     static final String MESSAGE = "No spawnable method";
 
     NoSpawningMethodException() {
-	super(MESSAGE);
+        super(MESSAGE);
     }
 
     NoSpawningMethodException(String message) {
-	super(MESSAGE + ", " + message);
+        super(MESSAGE + ", " + message);
     }
 }

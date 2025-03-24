@@ -6,55 +6,57 @@ import java.util.Vector;
 
 final class Cluster {
     private String clusterName; // all references to a cluster's location are
-				// the same
+                                // the same
 
     private Vector<Victim> victims;
 
     protected Cluster(String name) {
-	this.clusterName = name;
-	victims = new Vector<Victim>();
+        this.clusterName = name;
+        victims = new Vector<>();
     }
 
     protected Cluster(Victim v) {
-	this(Victim.clusterOf(v.getIdent()));
-	victims.add(v);
+        this(Victim.clusterOf(v.getIdent()));
+        victims.add(v);
     }
 
+    @Override
     public boolean equals(Object o) {
-	if (o == this) {
-	    return true;
-	} else if (o instanceof Cluster) {
-	    Cluster other = (Cluster) o;
-	    return other.clusterName.equals(clusterName);
-	} else {
-	    return false;
-	}
+        if (o == this) {
+            return true;
+        } else if (o instanceof Cluster) {
+            Cluster other = (Cluster) o;
+            return other.clusterName.equals(clusterName);
+        } else {
+            return false;
+        }
     }
 
     public boolean equals(Cluster other) {
-	if (other == this) {
-	    return true;
-	}
-	return other.clusterName.equals(clusterName);
+        if (other == this) {
+            return true;
+        }
+        return other.clusterName.equals(clusterName);
     }
 
+    @Override
     public int hashCode() {
-	return clusterName.hashCode();
+        return clusterName.hashCode();
     }
 
     protected void add(Victim v) {
-	victims.add(v);
+        victims.add(v);
     }
 
     protected boolean remove(Victim v) {
-	return victims.remove(v);
+        return victims.remove(v);
     }
 
     protected Victim get(int index) {
-	return victims.get(index);
+        return victims.get(index);
     }
 
     protected int size() {
-	return victims.size();
+        return victims.size();
     }
 }

@@ -8,7 +8,7 @@ public class MethodCallsSyncException extends NoSpawningMethodException {
     }
 
     public MethodCallsSyncException(String message) {
-	super(message);
+        super(message);
     }
 
 }

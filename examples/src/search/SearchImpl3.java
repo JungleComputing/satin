@@ -6,8 +6,8 @@ class SearchImpl3 extends SatinObject implements Searcher3 {
 
     private static final long serialVersionUID = 1L;
 
-    public void search(int a[], int from, int to, int val)
-            throws SearchResultFound {
+    @Override
+    public void search(int a[], int from, int to, int val) throws SearchResultFound {
 
         if (from == to) { // The complete array has been searched.
             return; // The element was not found.

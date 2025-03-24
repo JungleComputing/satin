@@ -9,10 +9,10 @@ public final class SOReferenceSourceCrashedException extends Exception {
     private static final long serialVersionUID = -1679879808120308574L;
 
     public SOReferenceSourceCrashedException() {
-	super();
+        super();
     }
 
     public SOReferenceSourceCrashedException(String s) {
-	super(s);
+        super(s);
     }
 }

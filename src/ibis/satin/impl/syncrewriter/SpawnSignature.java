@@ -8,28 +8,30 @@ class SpawnSignature {
     private String className;
 
     SpawnSignature(Method method, String className) {
-	this.method = method;
-	this.className = className;
+        this.method = method;
+        this.className = className;
     }
 
     Method getMethod() {
-	return method;
+        return method;
     }
 
     String getClassName() {
-	return className;
+        return className;
     }
 
+    @Override
     public boolean equals(Object object) {
-	if (!(object instanceof SpawnSignature))
-	    return false;
-	SpawnSignature ss = (SpawnSignature) object;
+        if (!(object instanceof SpawnSignature)) {
+            return false;
+        }
+        SpawnSignature ss = (SpawnSignature) object;
 
-	return (this.method.equals(ss.method) && className.equals(ss.className));
+        return (this.method.equals(ss.method) && className.equals(ss.className));
     }
 
+    @Override
     public String toString() {
-	return "spawn signature: method: " + method.getName() + ", class: "
-		+ className;
+        return "spawn signature: method: " + method.getName() + ", class: " + className;
     }
 }
