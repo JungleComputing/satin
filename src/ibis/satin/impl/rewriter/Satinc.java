@@ -2061,7 +2061,7 @@ public final class Satinc extends IbiscComponent {
 
             name = invocationRecordClassName(m, clname);
 
-            out.println("public final class " + name + " extends ibis.satin.impl.spawnSync.InvocationRecord {");
+            out.println("public final class " + name + " extends ibis.satin.impl.spawnSync.InvocationRecord implements java.io.Serializable {");
 
             // fields
             out.println("    public " + clname + " self;");

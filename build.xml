@@ -15,7 +15,7 @@
 
     <target name="build"
             description="Build Satin"
-            depends="clean,copy-included-ipl,compile,javadoc" />
+            depends="clean,copy-included-ipl,compile" />
 
     <target name="build-external-ipl"
 	    description="Build with external IPL"
@@ -88,7 +88,7 @@
               dir="${tmp}"
               maxmemory="512m"
               fork="true">
-            <arg line="." />
+            <arg line=". -keep" />
             <classpath refid="default.classpath" />
         </java>
 
